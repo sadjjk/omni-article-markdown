@@ -42,6 +42,8 @@ class XhsExtractor(Extractor):
             image_list = note.get("imageList", [])
             tag_list = note.get("tagList", [])
             interact = note.get("interactInfo", {})
+            note_type = note.get("type", "normal")
+            video_info = note.get("video", {})
 
             # 从 desc 中移除标签文本（小红书把 #话题# 混在正文末尾）
             tag_names = [t.get("name", "") for t in tag_list if t.get("name")]
@@ -53,7 +55,7 @@ class XhsExtractor(Extractor):
             clean_desc = clean_desc.strip()
 
             # 构造 body Tag
-            body = self._build_body_tag(title, clean_desc, image_list, tag_names, interact)
+            body = self._build_body_tag(title, clean_desc, image_list, tag_names, interact, note_type, video_info)
 
             url = self.extract_url()
             article = Article(title=title or "无标题", url=url, description=clean_desc, body=body)
@@ -87,6 +89,8 @@ class XhsExtractor(Extractor):
         image_list: list,
         tag_names: list[str],
         interact: dict,
+        note_type: str = "normal",
+        video_info: dict | None = None,
     ) -> Tag:
         """构造 body Tag，让 Parser 正常处理"""
         soup = BeautifulSoup("", "html5lib")
@@ -122,6 +126,16 @@ class XhsExtractor(Extractor):
             br = soup.new_tag("br")
             body.append(br)
 
+        # 视频（视频类笔记提取视频地址）
+        if note_type == "video" and video_info:
+            video_url = self._extract_video_url(video_info)
+            if video_url:
+                video_p = soup.new_tag("p")
+                a_tag = soup.new_tag("a", attrs={"href": video_url})
+                a_tag.string = "视频"
+                video_p.append(a_tag)
+                body.append(video_p)
+
         # 标签
         if tag_names:
             tag_p = soup.new_tag("p")
@@ -146,7 +160,37 @@ class XhsExtractor(Extractor):
 
         return body
 
+    def _extract_video_url(self, video_info: dict) -> str:
+        """从 video_info 中提取视频地址"""
+        # mediaV2 可能是 JSON 字符串
+        media_v2 = video_info.get("mediaV2", {})
+        if isinstance(media_v2, str):
+            try:
+                media_v2 = json.loads(media_v2)
+            except json.JSONDecodeError:
+                media_v2 = {}
+        stream = media_v2.get("stream", {})
+        h264_list = stream.get("h264", [])
+        if h264_list:
+            url = h264_list[0].get("master_url", "")
+            if url:
+                return url
+        # 降级 media.stream.h264[0].master_url
+        media = video_info.get("media", {})
+        media_stream = media.get("stream", {})
+        h264_list = media_stream.get("h264", [])
+        if h264_list:
+            url = h264_list[0].get("master_url", "")
+            if url:
+                return url
+        return ""
+
     @override
     def extract_img(self, element: Tag) -> Tag:
         """图片已在 _build_body_tag 中处理，这里直接返回"""
+        return element
+
+    @override
+    def extract_video(self, element: Tag) -> Tag:
+        """视频已在 _build_body_tag 中处理，这里直接返回"""
         return element

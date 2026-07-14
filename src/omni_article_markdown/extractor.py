@@ -65,6 +65,7 @@ class Extractor(ABC):
                 for comment in article_tag.find_all(string=lambda text: isinstance(text, Comment)):
                     comment.extract()
                 self.extract_img(article_tag)
+                self.extract_video(article_tag)
                 url = self.extract_url()
                 article = Article(title=title, url=url, description=description, body=article_tag)
                 self.remove_duplicate_titles(article)
@@ -93,6 +94,9 @@ class Extractor(ABC):
         return get_og_url(self.soup) or get_canonical_url(self.soup)
 
     def extract_img(self, element: Tag) -> Tag:
+        return element
+
+    def extract_video(self, element: Tag) -> Tag:
         return element
 
     def extract_article(self) -> Article | None:

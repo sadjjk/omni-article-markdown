@@ -1,5 +1,31 @@
 # 墨探 (omni-article-markdown)
 
+## Fork 更新日志
+
+> 本 Fork 在 [原项目 caol64/omni-article-markdown](https://github.com/caol64/omni-article-markdown) 基础上扩展。
+
+### 2026-07-14
+
+#### 新增小红书笔记适配器
+
+**新增文件：**
+
+| 文件 | 说明 |
+|------|------|
+| `src/omni_article_markdown/readers/xiaohongshu.py` | XhsReader：短链重定向 → xsec_token URL encode → 抓取 HTML |
+| `src/omni_article_markdown/extractors/xiaohongshu.py` | XhsExtractor：从 `__INITIAL_STATE__` JSON 提取标题/正文/图片/标签/互动数据 |
+
+**功能特性：**
+
+- ✅ 支持小红书分享短链（`xhslink.com`）和完整 URL（`xiaohongshu.com/discovery/item/`）
+- ✅ 保留图片原始 URL，每张图片独占一行，带序号
+- ✅ 提取标签和互动数据（赞/收藏/评论）
+- ✅ 去重正文中的标签文本，避免重复输出
+- ❌ 不支持视频内容提取
+- ❌ 不需要 Cookie / 浏览器 / 登录态
+
+---
+
 [![PyPI](https://img.shields.io/pypi/v/omni-article-markdown)](https://pypi.org/project/omni-article-markdown/)
 ![Python](https://img.shields.io/pypi/pyversions/omni-article-markdown)
 [![License](https://img.shields.io/github/license/caol64/omni-article-markdown)](LICENSE)

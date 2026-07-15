@@ -80,7 +80,7 @@ class XhsExtractor(Extractor):
             article = Article(
                 title=title or "无标题",
                 url=url,
-                description=clean_desc,
+                description="",
                 body=body,
                 platform=self.platform_name,
                 author=self.extract_author(),

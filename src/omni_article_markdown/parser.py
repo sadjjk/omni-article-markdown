@@ -330,10 +330,12 @@ class HtmlMarkdownParser:
         if article.title:
             lines.append(f"title: {_yaml_escape(article.title)}")
         if article.description:
-            desc = article.description.strip()
-            if len(desc) > 200:
-                desc = desc[:200].rstrip() + "..."
-            lines.append(f"description: {_yaml_escape(desc)}")
+            # 归一化空白：换行/制表符/多空格 → 单个空格
+            desc = re.sub(r"\s+", " ", article.description).strip()
+            if desc and len(desc) > 150:
+                desc = desc[:150].rstrip() + "..."
+            if desc:
+                lines.append(f"description: {_yaml_escape(desc)}")
         if article.url:
             lines.append(f"source: {article.url}")
         if article.platform:

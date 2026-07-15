@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
@@ -146,3 +147,68 @@ def clean_text(text: str) -> str:
         return ""
     cleaned = _INVISIBLE_RE.sub("", text)
     return cleaned
+
+
+def get_article_author(soup: BeautifulSoup) -> str:
+    # 提取文章作者
+    for prop in ["article:author", "author"]:
+        tag = filter_tag(soup.find("meta", {"property": prop})) or filter_tag(soup.find("meta", {"name": prop}))
+        if tag:
+            return get_tag_text(tag, "content")
+    return ""
+
+
+def get_article_tags(soup: BeautifulSoup) -> list[str]:
+    # 提取文章标签
+    tags: list[str] = []
+    for tag_el in soup.find_all("meta", {"property": "article:tag"}):
+        val = get_tag_text(filter_tag(tag_el), "content")
+        if val:
+            tags.append(val)
+    if not tags:
+        kw_tag = filter_tag(soup.find("meta", {"name": "keywords"}))
+        if kw_tag:
+            kw = get_tag_text(kw_tag, "content")
+            if kw:
+                tags = [t.strip() for t in kw.split(",") if t.strip()]
+    return tags
+
+
+def _normalize_date(date_str: str) -> str:
+    # 归一化日期为 ISO 8601 格式
+    if not date_str:
+        return ""
+    date_str = date_str.strip()
+    if re.match(r"^\d{4}-\d{2}-\d{2}T", date_str):
+        return date_str
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+        return f"{date_str}T00:00:00"
+    m = re.match(r"^(\d{4})年(\d{1,2})月(\d{1,2})日", date_str)
+    if m:
+        return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}T00:00:00"
+    try:
+        ts = int(date_str)
+        if ts > 1e9:
+            return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        pass
+    for fmt in ["%Y/%m/%d %H:%M", "%Y/%m/%d", "%B %d, %Y", "%b %d, %Y"]:
+        try:
+            dt = datetime.strptime(date_str, fmt)
+            return dt.strftime("%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            continue
+    return date_str
+
+
+def get_publish_date(soup: BeautifulSoup) -> str:
+    # 提取发布日期
+    for prop in ["article:published_time", "pubdate", "publishdate"]:
+        tag = filter_tag(soup.find("meta", {"property": prop})) or filter_tag(soup.find("meta", {"name": prop}))
+        if tag:
+            raw = get_tag_text(tag, "content")
+            return _normalize_date(raw) if raw else ""
+    time_tag = filter_tag(soup.find("time"))
+    if time_tag and time_tag.has_attr("datetime"):
+        return _normalize_date(time_tag["datetime"])
+    return ""

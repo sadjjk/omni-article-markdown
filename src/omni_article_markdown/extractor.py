@@ -8,7 +8,7 @@ from bs4.element import Comment, Tag
 
 from .article import Article
 from .plugins import load_plugins
-from .utils import filter_tag, get_attr_text, get_canonical_url, get_og_description, get_og_title, get_og_url, get_title
+from .utils import filter_tag, get_article_author, get_article_tags, get_attr_text, get_canonical_url, get_og_description, get_og_title, get_og_url, get_publish_date, get_title
 
 type TagPredicate = Callable[[Tag], bool]
 
@@ -67,7 +67,19 @@ class Extractor(ABC):
                 self.extract_img(article_tag)
                 self.extract_video(article_tag)
                 url = self.extract_url()
-                article = Article(title=title, url=url, description=description, body=article_tag)
+                author = self.extract_author()
+                tags = self.extract_tags()
+                publish_date = self.extract_publish_date()
+                article = Article(
+                    title=title,
+                    url=url,
+                    description=description,
+                    body=article_tag,
+                    platform=self.platform_name,
+                    author=author,
+                    tags=tags,
+                    publish_date=publish_date,
+                )
                 self.remove_duplicate_titles(article)
                 return article
         return None
@@ -98,6 +110,17 @@ class Extractor(ABC):
 
     def extract_video(self, element: Tag) -> Tag:
         return element
+
+    platform_name: str = "其他"
+
+    def extract_author(self) -> str:
+        return get_article_author(self.soup)
+
+    def extract_tags(self) -> list[str]:
+        return get_article_tags(self.soup)
+
+    def extract_publish_date(self) -> str:
+        return get_publish_date(self.soup)
 
     def extract_article(self) -> Article | None:
         return None

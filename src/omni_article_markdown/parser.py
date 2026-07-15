@@ -17,6 +17,10 @@ from .utils import (
     move_spaces,
 )
 
+MEDIA_SECTION_TITLE = "媒体文件"
+MEDIA_VIDEO_TITLE = "视频"
+MEDIA_IMAGE_TITLE = "图片"
+
 LB_SYMBOL = "[|lb_bl|]"
 
 POST_HANDLERS: list[Callable[[str], str]] = [
@@ -269,10 +273,11 @@ class HtmlMarkdownParser:
                 src = urljoin(self.article.url, src)
             # 收集图片到媒体列表（排除 SVG base64）
             if not src.startswith("data:image/svg+xml"):
-                # alt 为空时自动编号
-                if not alt:
-                    alt = f"图片 {len(self._media_images) + 1}"
-                self._media_images.append((src, alt))
+                if not any(url == src for url, _ in self._media_images):
+                    # alt 为空时自动编号
+                    if not alt:
+                        alt = f"图片 {len(self._media_images) + 1}"
+                    self._media_images.append((src, alt))
             return f"![{alt}]({src})"
         return ""
 
@@ -355,26 +360,47 @@ class HtmlMarkdownParser:
         lines.append("---")
         return "\n".join(lines)
 
-    def _build_media_section(self) -> str:
+    def _build_media_section(self, downloaded_urls: dict[str, str] | None = None, img_dir: str = "", vid_dir: str = "") -> str:
         # 构建末尾媒体文件段
         if not self._media_videos and not self._media_images:
             return ""
 
-        sections = ["\n\n---\n\n## 媒体文件\n\n"]
+        if downloaded_urls is None:
+            downloaded_urls = {}
+
+        sections = [f"\n\n---\n\n## {MEDIA_SECTION_TITLE}\n\n"]
 
         if self._media_videos:
-            sections.append("### 视频\n\n")
+            sections.append(f"### {MEDIA_VIDEO_TITLE}\n\n")
             for i, (url, desc) in enumerate(self._media_videos, 1):
-                sections.append(f"{i}. [{desc}]({url})\n")
+                if url in downloaded_urls:
+                    local_name = downloaded_urls[url]
+                    local_path = f"{vid_dir}/{local_name}" if vid_dir else local_name
+                    sections.append(f"{i}. [原视频]({url}) [{desc}]({local_path}) ✅已下载\n")
+                else:
+                    sections.append(f"{i}. [{desc}]({url})\n")
             sections.append("\n")
 
         if self._media_images:
-            sections.append("### 图片\n\n")
+            sections.append(f"### {MEDIA_IMAGE_TITLE}\n\n")
             for i, (url, alt) in enumerate(self._media_images, 1):
-                sections.append(f"{i}. ![{alt}]({url})\n")
+                if url in downloaded_urls:
+                    local_name = downloaded_urls[url]
+                    local_path = f"{img_dir}/{local_name}" if img_dir else local_name
+                    sections.append(f"{i}. [原图]({url}) ![{alt}]({local_path}) ✅已下载\n")
+                else:
+                    sections.append(f"{i}. ![{alt}]({url})\n")
             sections.append("\n")
 
         return "".join(sections)
+
+    @property
+    def media_images(self) -> list[tuple[str, str]]:
+        return self._media_images
+
+    @property
+    def media_videos(self) -> list[tuple[str, str]]:
+        return self._media_videos
 
     def _process_link(self, element: Tag, link_text: str) -> str:
         link = get_attr_text(element.get("href"))

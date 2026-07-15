@@ -187,6 +187,9 @@ class XhsExtractor(Extractor):
                 a_tag = soup.new_tag("a", attrs={"href": video_url})
                 a_tag.string = "视频"
                 video_p.append(a_tag)
+                # 同时加 video 标签让 parser 收集到媒体段
+                video_tag = soup.new_tag("video", attrs={"src": video_url, "title": "视频"})
+                video_p.append(video_tag)
                 body.append(video_p)
 
         # 标签

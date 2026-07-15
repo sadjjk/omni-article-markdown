@@ -188,7 +188,11 @@ def _normalize_date(date_str: str) -> str:
         return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}T00:00:00"
     try:
         ts = int(date_str)
+        if ts > 1e12:
+            # 毫秒时间戳
+            return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         if ts > 1e9:
+            # 秒级时间戳
             return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
     except ValueError:
         pass

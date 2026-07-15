@@ -3,7 +3,7 @@ from typing import override
 from bs4.element import Tag
 
 from ..extractor import Extractor
-from ..utils import filter_tag, get_attr_text, get_og_site_name
+from ..utils import filter_tag, get_attr_text, get_canonical_url, get_og_description, get_og_site_name
 
 
 class JianshuExtractor(Extractor):
@@ -17,12 +17,8 @@ class JianshuExtractor(Extractor):
         return get_og_site_name(self.soup) == "简书"
 
     @override
-    def extract_description(self) -> str:
-        return ""
-
-    @override
     def extract_url(self) -> str:
-        return "https:"
+        return get_canonical_url(self.soup)
 
     @override
     def extract_img(self, element: Tag) -> Tag:

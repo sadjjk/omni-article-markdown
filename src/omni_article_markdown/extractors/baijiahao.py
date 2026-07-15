@@ -8,6 +8,7 @@ class Netease163Extractor(Extractor):
     """
     百家号
     """
+    platform_name = "百家号"
 
     @override
     def can_handle(self) -> bool:

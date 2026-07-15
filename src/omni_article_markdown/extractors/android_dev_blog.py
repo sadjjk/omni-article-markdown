@@ -8,6 +8,7 @@ class AndroidDevelopersBlogExtractor(Extractor):
     """
     Android Developers Blog
     """
+    platform_name = "Android Developers"
 
     @override
     def can_handle(self) -> bool:

@@ -8,6 +8,7 @@ class AliyunDeveloperExtractor(Extractor):
     """
     developer.aliyun.com
     """
+    platform_name = "阿里云开发者"
 
     @override
     def can_handle(self) -> bool:

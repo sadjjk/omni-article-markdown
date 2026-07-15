@@ -11,6 +11,7 @@ class HackernoonExtractor(Extractor):
     """
     hackernoon.com
     """
+    platform_name = "HackerNoon"
 
     @override
     def can_handle(self) -> bool:

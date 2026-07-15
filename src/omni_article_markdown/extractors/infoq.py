@@ -8,6 +8,7 @@ class InfoQExtractor(Extractor):
     """
     www.infoq.com
     """
+    platform_name = "InfoQ"
 
     @override
     def can_handle(self) -> bool:

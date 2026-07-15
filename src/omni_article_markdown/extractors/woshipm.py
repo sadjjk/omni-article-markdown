@@ -8,6 +8,7 @@ class WoShiPMExtractor(Extractor):
     """
     人人都是产品经理
     """
+    platform_name = "人人都是产品经理"
 
     @override
     def can_handle(self) -> bool:

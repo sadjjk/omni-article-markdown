@@ -10,6 +10,7 @@ class WechatGZHExtractor(Extractor):
     """
     微信公众号
     """
+    platform_name = "微信公众号"
 
     @override
     def can_handle(self) -> bool:

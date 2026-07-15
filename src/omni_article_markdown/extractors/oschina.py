@@ -7,6 +7,7 @@ class OsChinaExtractor(Extractor):
     """
     开源中国
     """
+    platform_name = "开源中国"
 
     @override
     def can_handle(self) -> bool:

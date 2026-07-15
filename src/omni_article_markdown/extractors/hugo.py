@@ -7,6 +7,7 @@ class HugoExtractor(Extractor):
     """
     Hugo博客
     """
+    platform_name = "Hugo"
 
     @override
     def can_handle(self) -> bool:

@@ -8,6 +8,7 @@ class TowardsDataScienceExtractor(Extractor):
     """
     towardsdatascience.com
     """
+    platform_name = "Towards Data Science"
 
     @override
     def can_handle(self) -> bool:

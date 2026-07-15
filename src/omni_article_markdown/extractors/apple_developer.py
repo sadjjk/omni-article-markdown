@@ -8,6 +8,7 @@ class AppleDevelopExtractor(Extractor):
     """
     Apple Developer Documentation
     """
+    platform_name = "Apple Developer"
 
     @override
     def can_handle(self) -> bool:

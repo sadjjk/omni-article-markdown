@@ -8,6 +8,7 @@ class ZhihuExtractor(Extractor):
     """
     知乎专栏
     """
+    platform_name = "知乎"
 
     @override
     def can_handle(self) -> bool:

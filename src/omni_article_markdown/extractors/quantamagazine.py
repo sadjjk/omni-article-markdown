@@ -8,6 +8,7 @@ class QuantamagazineExtractor(Extractor):
     """
     quantamagazine.org
     """
+    platform_name = "Quanta Magazine"
 
     @override
     def can_handle(self) -> bool:

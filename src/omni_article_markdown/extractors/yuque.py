@@ -11,6 +11,7 @@ class YuqueExtractor(Extractor):
     """
     语雀
     """
+    platform_name = "语雀"
 
     @override
     def can_handle(self) -> bool:

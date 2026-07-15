@@ -8,6 +8,7 @@ class SspaiExtractor(Extractor):
     """
     少数派
     """
+    platform_name = "少数派"
 
     @override
     def can_handle(self) -> bool:

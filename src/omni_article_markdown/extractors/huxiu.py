@@ -6,6 +6,7 @@ from ..utils import get_og_site_name
 
 class HuxiuExtractor(Extractor):
     """虎嗅网"""
+    platform_name = "虎嗅"
 
     @override
     def can_handle(self) -> bool:

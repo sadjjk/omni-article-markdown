@@ -15,6 +15,25 @@ class XhsExtractor(Extractor):
     小红书页面内容通过 SSR 渲染在 __INITIAL_STATE__ JSON 中。
     从 JSON 提取标题、正文、图片、标签，构造 BeautifulSoup Tag 返回。
     """
+    platform_name = "小红书"
+
+    @override
+    def extract_tags(self) -> list[str]:
+        # 从 JSON tagList 提取标签
+        json_data = self._extract_initial_state()
+        if not json_data:
+            return super().extract_tags()
+        note_map = json_data.get("note", {}).get("noteDetailMap", {})
+        tags: list[str] = []
+        for nid, ninfo in note_map.items():
+            note = ninfo.get("note", {})
+            for t in note.get("tagList", []):
+                name = t.get("name", "")
+                if name:
+                    tags.append(name)
+            if tags:
+                break
+        return tags
 
     @override
     def can_handle(self) -> bool:
@@ -58,7 +77,16 @@ class XhsExtractor(Extractor):
             body = self._build_body_tag(title, clean_desc, image_list, tag_names, interact, note_type, video_info)
 
             url = self.extract_url()
-            article = Article(title=title or "无标题", url=url, description=clean_desc, body=body)
+            article = Article(
+                title=title or "无标题",
+                url=url,
+                description=clean_desc,
+                body=body,
+                platform=self.platform_name,
+                author=self.extract_author(),
+                tags=self.extract_tags(),
+                publish_date=self.extract_publish_date(),
+            )
             self.remove_duplicate_titles(article)
             return article
 

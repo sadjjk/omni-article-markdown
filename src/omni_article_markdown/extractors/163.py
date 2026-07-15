@@ -8,6 +8,7 @@ class Netease163Extractor(Extractor):
     """
     163.com
     """
+    platform_name = "网易"
 
     @override
     def can_handle(self) -> bool:

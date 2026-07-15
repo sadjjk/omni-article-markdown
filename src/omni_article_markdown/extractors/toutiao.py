@@ -10,6 +10,7 @@ class ToutiaoExtractor(Extractor):
     """
     今日头条
     """
+    platform_name = "今日头条"
 
     @override
     def can_handle(self) -> bool:

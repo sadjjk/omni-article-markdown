@@ -8,6 +8,7 @@ class GoogleBlogExtractor(Extractor):
     """
     developers.googleblog.com
     """
+    platform_name = "Google Blog"
 
     @override
     def can_handle(self) -> bool:

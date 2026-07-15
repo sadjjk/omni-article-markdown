@@ -8,6 +8,7 @@ class SpringBlogExtractor(Extractor):
     """
     spring.io/blog
     """
+    platform_name = "Spring Blog"
 
     @override
     def can_handle(self) -> bool:

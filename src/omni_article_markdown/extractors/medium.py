@@ -8,6 +8,7 @@ class MediumExtractor(Extractor):
     """
     Medium
     """
+    platform_name = "Medium"
 
     @override
     def can_handle(self) -> bool:

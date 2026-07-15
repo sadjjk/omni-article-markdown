@@ -8,6 +8,7 @@ class MicrosoftLearnExtractor(Extractor):
     """
     微软技术文档
     """
+    platform_name = "Microsoft Learn"
 
     @override
     def can_handle(self) -> bool:

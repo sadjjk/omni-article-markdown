@@ -8,6 +8,7 @@ class ClaudeDocExtractor(Extractor):
     """
     docs.claude.com
     """
+    platform_name = "Claude Doc"
 
     @override
     def can_handle(self) -> bool:

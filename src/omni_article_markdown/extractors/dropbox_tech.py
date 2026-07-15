@@ -8,6 +8,7 @@ class DropboxTechExtractor(Extractor):
     """
     dropbox.tech
     """
+    platform_name = "Dropbox Tech"
 
     @override
     def can_handle(self) -> bool:

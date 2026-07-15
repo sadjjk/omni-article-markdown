@@ -8,6 +8,7 @@ class TwitterExtractor(Extractor):
     """
     Twitter/X 推文提取器
     """
+    platform_name = "Twitter"
 
     @override
     def can_handle(self) -> bool:

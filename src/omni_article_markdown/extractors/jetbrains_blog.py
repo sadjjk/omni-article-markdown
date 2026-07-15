@@ -8,6 +8,7 @@ class JetbrainsBlogExtractor(Extractor):
     """
     blog.jetbrains.com
     """
+    platform_name = "JetBrains Blog"
 
     @override
     def can_handle(self) -> bool:

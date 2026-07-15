@@ -10,6 +10,7 @@ class JianshuExtractor(Extractor):
     """
     www.jianshu.com
     """
+    platform_name = "简书"
 
     @override
     def can_handle(self) -> bool:

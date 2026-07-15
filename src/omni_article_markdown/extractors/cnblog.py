@@ -8,6 +8,7 @@ class CnBlogsExtractor(Extractor):
     """
     博客园
     """
+    platform_name = "博客园"
 
     @override
     def can_handle(self) -> bool:

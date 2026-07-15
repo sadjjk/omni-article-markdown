@@ -8,6 +8,7 @@ class SnowflakeBlogExtractor(Extractor):
     """
     Snowflake 技术博客
     """
+    platform_name = "Snowflake Blog"
 
     @override
     def can_handle(self) -> bool:

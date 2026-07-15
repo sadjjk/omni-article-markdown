@@ -8,6 +8,7 @@ class CloudflareBlogExtractor(Extractor):
     """
     blog.cloudflare.com
     """
+    platform_name = "Cloudflare Blog"
 
     @override
     def can_handle(self) -> bool:

@@ -9,6 +9,7 @@ class FeishuExtractor(Extractor):
     """
     飞书云文档
     """
+    platform_name = "飞书"
 
     @override
     def can_handle(self) -> bool:

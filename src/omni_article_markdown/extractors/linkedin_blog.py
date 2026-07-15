@@ -10,6 +10,7 @@ class LinkedInBlogExtractor(Extractor):
     """
     www.linkedin.com
     """
+    platform_name = "LinkedIn"
 
     @override
     def can_handle(self) -> bool:

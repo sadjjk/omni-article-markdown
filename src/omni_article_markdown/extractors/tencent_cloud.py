@@ -7,6 +7,7 @@ class TencentCloudExtractor(Extractor):
     """
     腾讯云开发者社区
     """
+    platform_name = "腾讯云"
 
     @override
     def can_handle(self) -> bool:

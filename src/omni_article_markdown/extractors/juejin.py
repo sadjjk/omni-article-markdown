@@ -8,6 +8,7 @@ class JuejinExtractor(Extractor):
     """
     juejin.cn
     """
+    platform_name = "掘金"
 
     @override
     def can_handle(self) -> bool:

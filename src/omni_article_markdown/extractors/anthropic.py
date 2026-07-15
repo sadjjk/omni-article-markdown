@@ -8,6 +8,7 @@ class ClaudeDocExtractor(Extractor):
     """
     Anthropic
     """
+    platform_name = "Anthropic"
 
     @override
     def can_handle(self) -> bool:

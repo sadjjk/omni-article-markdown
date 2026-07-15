@@ -8,6 +8,7 @@ class WikipediaExtractor(Extractor):
     """
     wikipedia.org
     """
+    platform_name = "Wikipedia"
 
     @override
     def can_handle(self) -> bool:

@@ -355,15 +355,15 @@ class HtmlMarkdownParser:
         if not self._media_videos and not self._media_images:
             return ""
 
-        sections = ["\n\n---\n\n## 媒体文件\n"]
+        sections = ["\n\n---\n\n## 媒体文件\n\n"]
 
         if self._media_videos:
-            sections.append("### 视频\n")
+            sections.append("### 视频\n\n")
             for i, (url, desc) in enumerate(self._media_videos, 1):
                 sections.append(f"{i}. [{desc}]({url})\n")
 
         if self._media_images:
-            sections.append("### 图片\n")
+            sections.append("### 图片\n\n")
             for i, (url, alt) in enumerate(self._media_images, 1):
                 sections.append(f"{i}. ![{alt}]({url})\n")
 

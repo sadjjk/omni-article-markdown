@@ -183,6 +183,11 @@ def _normalize_date(date_str: str) -> str:
         # 去掉时区后缀（+08:00 / Z）
         date_str = re.sub(r"[+-]\d{2}:\d{2}$", "", date_str)
         date_str = date_str.rstrip("Z")
+        # 去掉毫秒后缀（.000）
+        date_str = re.sub(r"\.\d+$", "", date_str)
+        # 补全秒数（14:00 → 14:00:00）
+        if re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$", date_str):
+            date_str += ":00"
         return date_str
     if re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
         return f"{date_str}T00:00:00"

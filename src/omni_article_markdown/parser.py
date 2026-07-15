@@ -361,11 +361,13 @@ class HtmlMarkdownParser:
             sections.append("### 视频\n\n")
             for i, (url, desc) in enumerate(self._media_videos, 1):
                 sections.append(f"{i}. [{desc}]({url})\n")
+            sections.append("\n")
 
         if self._media_images:
             sections.append("### 图片\n\n")
             for i, (url, alt) in enumerate(self._media_images, 1):
                 sections.append(f"{i}. ![{alt}]({url})\n")
+            sections.append("\n")
 
         return "".join(sections)
 

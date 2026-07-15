@@ -94,6 +94,8 @@ class OmniArticleMarkdown:
             old_md = cache[cache_key].get("md_file", "")
             old_path = Path(save_path) / old_md if old_md else None
             if old_path and old_path.exists():
+                if self.reporter:
+                    self.reporter(f"内容未变化，跳过: {old_path.resolve()}")
                 return str(old_path.resolve())
 
         # 确保目录存在

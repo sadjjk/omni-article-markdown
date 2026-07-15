@@ -100,9 +100,13 @@ def rebuild_media_section(
 
 
 def compute_hash(markdown: str) -> str:
-    # 只算正文（去 created + 去媒体段）
+    # 只算正文（去 created + 去媒体段 + 去 URL 签名）
     content = re.sub(r"^created:.*$", "", markdown, flags=re.MULTILINE)
     content = re.sub(r"\n\n---\n\n## " + MEDIA_SECTION_TITLE + r"\n.*$", "", content, flags=re.DOTALL)
+    # 正文里的图片/视频 URL 只保留文件名，去掉 CDN 签名和 query 参数
+    # ![alt](https://xxx/签名/路径/文件名.jpg?q=xx) → ![alt](文件名.jpg)
+    content = re.sub(r"!\[([^\]]*)\]\(https?://[^)]*/([^/)]+)\)", r"![\1](\2)", content)
+    content = re.sub(r"\[([^\]]*)\]\(https?://[^)]*/([^/)]+)\)", r"[\1](\2)", content)
     return hashlib.md5(content.encode()).hexdigest()
 
 

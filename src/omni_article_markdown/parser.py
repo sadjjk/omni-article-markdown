@@ -269,6 +269,9 @@ class HtmlMarkdownParser:
                 src = urljoin(self.article.url, src)
             # 收集图片到媒体列表（排除 SVG base64）
             if not src.startswith("data:image/svg+xml"):
+                # alt 为空时自动编号
+                if not alt:
+                    alt = f"图片 {len(self._media_images) + 1}"
                 self._media_images.append((src, alt))
             return f"![{alt}]({src})"
         return ""

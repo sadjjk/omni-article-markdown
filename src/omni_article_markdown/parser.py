@@ -1,6 +1,7 @@
 import base64
 import re
 from collections.abc import Callable
+from datetime import datetime, timezone
 from urllib.parse import urljoin
 
 from bs4.element import NavigableString, Tag
@@ -62,6 +63,8 @@ TRUSTED_ELEMENTS = INLINE_ELEMENTS + BLOCK_ELEMENTS
 class HtmlMarkdownParser:
     def __init__(self, article: Article):
         self.article = article
+        self._media_videos: list[str] = []
+        self._media_images: list[str] = []
 
     def parse(self) -> tuple[str, str]:
         if isinstance(self.article.body, str):
@@ -70,11 +73,9 @@ class HtmlMarkdownParser:
             markdown = self._process_children(self.article.body)
         for handler in POST_HANDLERS:
             markdown = handler(markdown)
-        if not self.article.description or self.article.description in markdown:
-            description = ""
-        else:
-            description = f"> {self.article.description}\n\n"
-        result = f"# {self.article.title}\n\n{description}{markdown}"
+        frontmatter = self._build_frontmatter()
+        media_section = self._build_media_section()
+        result = f"{frontmatter}\n# {self.article.title}\n\n{markdown}{media_section}"
         # print(result)
         return (self.article.title, result)
 
@@ -151,6 +152,8 @@ class HtmlMarkdownParser:
             case "svg":  # 处理svg图片
                 if element.get("data-id") == "omnimd":
                     parts.append(self._process_svg(element))
+            case "video" | "iframe" | "embed":
+                parts.append(self._process_video(element))
             case _:
                 parts.append(self._process_children(element, level, is_pre=is_pre))
         result = "".join(parts)
@@ -264,8 +267,102 @@ class HtmlMarkdownParser:
         if src:
             if not src.startswith("http") and self.article.url:
                 src = urljoin(self.article.url, src)
+            # 收集图片到媒体列表（排除 SVG base64）
+            if not src.startswith("data:image/svg+xml"):
+                self._media_images.append(src)
             return f"![{alt}]({src})"
         return ""
+
+    def _process_video(self, element: Tag) -> str:
+        # 提取视频/嵌入内容 URL，收集到媒体列表，正文不输出
+        tag_name = element.name
+        src = ""
+
+        if tag_name == "video":
+            src = element.get("src", "")
+            if not src:
+                source = element.find("source", src=True)
+                if source:
+                    src = source.get("src", "")
+            # poster 封面图收集到图片列表
+            poster = element.get("poster", "")
+            if poster and poster not in self._media_images:
+                self._media_images.append(poster)
+        elif tag_name in ("iframe", "embed"):
+            src = element.get("src", "")
+
+        # 跳过空 src 和 about:blank
+        if not src or src.startswith("about:blank"):
+            return ""
+
+        # urljoin 补全
+        src = urljoin(self.article.url, src)
+
+        # 去重
+        if src in self._media_videos:
+            return ""
+
+        # 描述：title → figcaption → 默认
+        desc = element.get("title", "")
+        if not desc:
+            figure = element.find_parent("figure")
+            if figure:
+                caption = figure.find("figcaption")
+                if caption:
+                    desc = caption.get_text(strip=True)
+        if not desc:
+            desc = "嵌入内容" if tag_name == "iframe" else "视频"
+
+        self._media_videos.append(src)
+        return ""
+
+    def _build_frontmatter(self) -> str:
+        # 构建 YAML frontmatter
+        lines = ["---"]
+        article = self.article
+
+        def _yaml_escape(val: str) -> str:
+            # 含特殊字符时用双引号包裹
+            if any(c in val for c in (':', '"', '[', ']', '{', '}', '#', '&', '*', '?', '|', '-', '<', '>', '=', '!', '%', '@', '`')):
+                return f'"{val.replace(chr(34), chr(92) + chr(34))}"'
+            return val
+
+        if article.title:
+            lines.append(f"title: {_yaml_escape(article.title)}")
+        if article.description:
+            lines.append(f"description: {_yaml_escape(article.description)}")
+        if article.url:
+            lines.append(f"source: {article.url}")
+        if article.platform:
+            lines.append(f"platform: {_yaml_escape(article.platform)}")
+        if article.author:
+            lines.append(f"author: {_yaml_escape(article.author)}")
+        if article.tags:
+            lines.append(f"tags: [{', '.join(article.tags)}]")
+        if article.publish_date:
+            lines.append(f"published: {article.publish_date}")
+        lines.append(f"created: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')}")
+        lines.append("---")
+        return "\n".join(lines)
+
+    def _build_media_section(self) -> str:
+        # 构建末尾媒体文件段
+        if not self._media_videos and not self._media_images:
+            return ""
+
+        sections = ["\n\n---\n\n## 媒体文件\n"]
+
+        if self._media_videos:
+            sections.append("### 视频\n")
+            for i, url in enumerate(self._media_videos, 1):
+                sections.append(f"{i}. [视频]({url})\n")
+
+        if self._media_images:
+            sections.append("### 图片\n")
+            for i, url in enumerate(self._media_images, 1):
+                sections.append(f"{i}. ![]({url})\n")
+
+        return "".join(sections)
 
     def _process_link(self, element: Tag, link_text: str) -> str:
         link = get_attr_text(element.get("href"))

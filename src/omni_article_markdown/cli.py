@@ -67,7 +67,19 @@ def cli(): ...
     flag_value="./",
     default=None,
 )
-def parse_article(url_or_path: str, save: str | None, no_verify_ssl: bool):
+@click.option("--is-save-imgs", default=True, help="Download images when saving.")
+@click.option("--is-save-videos", default=False, help="Download videos when saving.")
+@click.option("--save-imgs-dir", default="imgs", help="Image save subdirectory.")
+@click.option("--save-videos-dir", default="videos", help="Video save subdirectory.")
+def parse_article(
+    url_or_path: str,
+    save: str | None,
+    no_verify_ssl: bool,
+    is_save_imgs: bool,
+    is_save_videos: bool,
+    save_imgs_dir: str,
+    save_videos_dir: str,
+):
     """
     Parses an article from a URL or local path and outputs/saves it as Markdown.
     """
@@ -78,7 +90,13 @@ def parse_article(url_or_path: str, save: str | None, no_verify_ssl: bool):
         if save is None:
             click.echo(handler.result())
         else:
-            save_path = handler.save(save)
+            save_path = handler.save(
+                save,
+                is_save_imgs=is_save_imgs,
+                is_save_videos=is_save_videos,
+                save_imgs_dir=save_imgs_dir,
+                save_videos_dir=save_videos_dir,
+            )
             stderr_reporter(f"Article saved to: {save_path}")
     except Exception as e:
         stderr(f"Error: {str(e)}")

@@ -67,8 +67,8 @@ def cli(): ...
     flag_value="./",
     default=None,
 )
-@click.option("--is-save-imgs", default=True, help="Download images when saving.")
-@click.option("--is-save-videos", default=False, help="Download videos when saving.")
+@click.option("--is-save-imgs", is_flag=True, default=True, help="Download images when saving.")
+@click.option("--is-save-videos", is_flag=True, default=False, help="Download videos when saving.")
 @click.option("--save-imgs-dir", default="imgs", help="Image save subdirectory.")
 @click.option("--save-videos-dir", default="videos", help="Video save subdirectory.")
 def parse_article(

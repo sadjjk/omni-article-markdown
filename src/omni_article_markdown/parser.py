@@ -290,7 +290,8 @@ class HtmlMarkdownParser:
             # poster 封面图收集到图片列表
             poster = element.get("poster", "")
             if poster and not any(url == poster for url, _ in self._media_images):
-                self._media_images.append((poster, ""))
+                poster_alt = f"图片 {len(self._media_images) + 1}"
+                self._media_images.append((poster, poster_alt))
         elif tag_name in ("iframe", "embed"):
             src = element.get("src", "")
 
@@ -305,7 +306,7 @@ class HtmlMarkdownParser:
         if any(url == src for url, _ in self._media_videos):
             return ""
 
-        # 描述：title → figcaption → 默认
+        # 描述：title → figcaption → 默认编号
         desc = element.get("title", "")
         if not desc:
             figure = element.find_parent("figure")
@@ -314,7 +315,8 @@ class HtmlMarkdownParser:
                 if caption:
                     desc = caption.get_text(strip=True)
         if not desc:
-            desc = "嵌入内容" if tag_name == "iframe" else "视频"
+            video_num = len(self._media_videos) + 1
+            desc = f"嵌入内容 {video_num}" if tag_name == "iframe" else f"视频 {video_num}"
 
         self._media_videos.append((src, desc))
         return ""

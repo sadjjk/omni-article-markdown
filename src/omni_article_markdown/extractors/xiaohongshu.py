@@ -36,6 +36,31 @@ class XhsExtractor(Extractor):
         return tags
 
     @override
+    def extract_author(self) -> str:
+        # 从 JSON user.nickname 提取作者
+        json_data = self._extract_initial_state()
+        if json_data:
+            note_map = json_data.get("note", {}).get("noteDetailMap", {})
+            for ninfo in note_map.values():
+                nickname = ninfo.get("note", {}).get("user", {}).get("nickname", "")
+                if nickname:
+                    return nickname
+        return super().extract_author()
+
+    @override
+    def extract_publish_date(self) -> str:
+        # 从 JSON note.time 提取发布时间（毫秒时间戳）
+        json_data = self._extract_initial_state()
+        if json_data:
+            note_map = json_data.get("note", {}).get("noteDetailMap", {})
+            for ninfo in note_map.values():
+                ts = ninfo.get("note", {}).get("time", 0)
+                if ts:
+                    from ..utils import _normalize_date
+                    return _normalize_date(str(ts))
+        return super().extract_publish_date()
+
+    @override
     def can_handle(self) -> bool:
         return "xiaohongshu.com" in (self.extract_url() or "")
 

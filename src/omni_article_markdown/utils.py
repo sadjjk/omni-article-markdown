@@ -34,7 +34,7 @@ def move_spaces(input_string: str, suffix: str) -> str:
 
 def to_snake_case(input_string: str) -> str:
     input_string = "".join(char if char.isalnum() else " " for char in input_string)
-    snake_case_string = "_".join(word.lower() for word in input_string.split())
+    snake_case_string = "-".join(word.lower() for word in input_string.split())
     return snake_case_string
 
 

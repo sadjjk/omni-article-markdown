@@ -63,8 +63,8 @@ TRUSTED_ELEMENTS = INLINE_ELEMENTS + BLOCK_ELEMENTS
 class HtmlMarkdownParser:
     def __init__(self, article: Article):
         self.article = article
-        self._media_videos: list[str] = []
-        self._media_images: list[str] = []
+        self._media_videos: list[tuple[str, str]] = []  # (url, description)
+        self._media_images: list[tuple[str, str]] = []  # (url, alt)
 
     def parse(self) -> tuple[str, str]:
         if isinstance(self.article.body, str):
@@ -269,7 +269,7 @@ class HtmlMarkdownParser:
                 src = urljoin(self.article.url, src)
             # 收集图片到媒体列表（排除 SVG base64）
             if not src.startswith("data:image/svg+xml"):
-                self._media_images.append(src)
+                self._media_images.append((src, alt))
             return f"![{alt}]({src})"
         return ""
 
@@ -286,8 +286,8 @@ class HtmlMarkdownParser:
                     src = source.get("src", "")
             # poster 封面图收集到图片列表
             poster = element.get("poster", "")
-            if poster and poster not in self._media_images:
-                self._media_images.append(poster)
+            if poster and not any(url == poster for url, _ in self._media_images):
+                self._media_images.append((poster, ""))
         elif tag_name in ("iframe", "embed"):
             src = element.get("src", "")
 
@@ -299,7 +299,7 @@ class HtmlMarkdownParser:
         src = urljoin(self.article.url, src)
 
         # 去重
-        if src in self._media_videos:
+        if any(url == src for url, _ in self._media_videos):
             return ""
 
         # 描述：title → figcaption → 默认
@@ -313,7 +313,7 @@ class HtmlMarkdownParser:
         if not desc:
             desc = "嵌入内容" if tag_name == "iframe" else "视频"
 
-        self._media_videos.append(src)
+        self._media_videos.append((src, desc))
         return ""
 
     def _build_frontmatter(self) -> str:
@@ -330,7 +330,10 @@ class HtmlMarkdownParser:
         if article.title:
             lines.append(f"title: {_yaml_escape(article.title)}")
         if article.description:
-            lines.append(f"description: {_yaml_escape(article.description)}")
+            desc = article.description.strip()
+            if len(desc) > 200:
+                desc = desc[:200].rstrip() + "..."
+            lines.append(f"description: {_yaml_escape(desc)}")
         if article.url:
             lines.append(f"source: {article.url}")
         if article.platform:
@@ -354,13 +357,13 @@ class HtmlMarkdownParser:
 
         if self._media_videos:
             sections.append("### 视频\n")
-            for i, url in enumerate(self._media_videos, 1):
-                sections.append(f"{i}. [视频]({url})\n")
+            for i, (url, desc) in enumerate(self._media_videos, 1):
+                sections.append(f"{i}. [{desc}]({url})\n")
 
         if self._media_images:
             sections.append("### 图片\n")
-            for i, url in enumerate(self._media_images, 1):
-                sections.append(f"{i}. ![]({url})\n")
+            for i, (url, alt) in enumerate(self._media_images, 1):
+                sections.append(f"{i}. ![{alt}]({url})\n")
 
         return "".join(sections)
 

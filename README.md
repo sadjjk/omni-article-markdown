@@ -4,6 +4,65 @@
 
 > 本 Fork 在 [原项目 caol64/omni-article-markdown](https://github.com/caol64/omni-article-markdown) 基础上扩展。
 
+### 2026-07-17
+
+#### 标题层级重构：新增 `# 原文` 固定一级标题
+
+所有标题统一降一级，腾出一级给固定的 `# 原文`，方便下游 Agent 在同一 md 文件中追加 `# AI 总结`、`# 阅读进度`、`# 想法记录` 等区块。
+
+**输出结构变化：**
+
+```markdown
+---
+frontmatter
+---
+
+# 原文                          ← 一级，固定
+
+## 文章标题                      ← 二级，原 # 降级
+
+正文内容...                      ← HTML h2→###, h3→#### ...
+```
+
+**改动文件：**
+
+| 文件 | 改动 |
+|------|------|
+| `src/omni_article_markdown/parser.py` | `parse()` 输出从 `# {title}` 改为 `# 原文\n\n## {title}` |
+| `src/omni_article_markdown/parser.py` | heading 分支所有标题 +1 级，h6 封顶 `min(h+1, 6)` |
+| `src/omni_article_markdown/parser.py` | 媒体段标题同步降一级：`##` → `###`，`###` → `####` |
+
+**标题映射：**
+
+| 原 HTML | 原 Markdown | 新 Markdown |
+|---------|------------|------------|
+| 文章标题 | `#` | `##` |
+| `<h1>` | `#` | `##` |
+| `<h2>` | `##` | `###` |
+| `<h3>` | `###` | `####` |
+| `<h4>` | `####` | `#####` |
+| `<h5>` | `#####` | `######` |
+| `<h6>` | `######` | `######`（封顶） |
+
+---
+
+### 2026-07-16
+
+#### 修复知乎专栏误匹配问答 Extractor
+
+将合并版 `extractors/zhihu.py` 拆分为两个独立文件：
+
+| 文件 | 说明 |
+|------|------|
+| `src/omni_article_markdown/extractors/zhihu_zhuanlan.py` | `ZhihuZhuanlanExtractor`：专栏专用，`can_handle` 只匹配 `og:site_name == "知乎专栏"`，正文容器 `div.Post-RichText` |
+| `src/omni_article_markdown/extractors/zhihu_qa.py` | `ZhihuQaExtractor`：问答专用，`can_handle` 先排除 `"知乎专栏"` 再匹配问答特征（`QuestionHeader` / `za-config` / `og:site_name == "知乎"`），正文容器 `div.RichContent-inner` |
+
+**问题原因：** 合并版 `ZhihuExtractor` 的 `can_handle` 同时匹配 `"知乎专栏"` 和 `"知乎"`，由于 `ExtractorFactory` 按文件名字母序遍历（`zhihu_qa` < `zhihu_zhuanlan`），问答 Extractor 先命中专栏页但找不到 `RichContent-inner` 容器，返回 `None` 后不会继续尝试下一个 Extractor，导致 `Failed to extract article content`。
+
+**修复方式：** `ZhihuQaExtractor.can_handle` 开头加 `if site_name == "知乎专栏": return False`，确保专栏页让位给 `ZhihuZhuanlanExtractor`。
+
+---
+
 ### 2026-07-14
 
 #### 新增小红书笔记适配器

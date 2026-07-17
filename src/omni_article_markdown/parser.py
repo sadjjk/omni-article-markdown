@@ -79,7 +79,7 @@ class HtmlMarkdownParser:
             markdown = handler(markdown)
         frontmatter = self._build_frontmatter()
         media_section = self._build_media_section()
-        result = f"{frontmatter}\n# {self.article.title}\n\n{markdown}{media_section}"
+        result = f"{frontmatter}\n# 原文\n\n## {self.article.title}\n\n{markdown}{media_section}"
         # print(result)
         return (self.article.title, result)
 
@@ -93,7 +93,9 @@ class HtmlMarkdownParser:
                 parts.append("---")
             case "h1" | "h2" | "h3" | "h4" | "h5" | "h6":
                 heading = self._process_children(element, level, is_pre=is_pre)
-                parts.append(f"{'#' * int(element.name[1])} {heading}")
+                # 标题降一级：h1→##, h2→###, ..., h5→######, h6→######（封顶）
+                level_num = min(int(element.name[1]) + 1, 6)
+                parts.append(f"{'#' * level_num} {heading}")
             case "sup":
                 sup = element.get_text(strip=True)
                 if sup:
@@ -368,10 +370,10 @@ class HtmlMarkdownParser:
         if downloaded_urls is None:
             downloaded_urls = {}
 
-        sections = [f"\n\n---\n\n## {MEDIA_SECTION_TITLE}\n\n"]
+        sections = [f"\n\n---\n\n### {MEDIA_SECTION_TITLE}\n\n"]
 
         if self._media_videos:
-            sections.append(f"### {MEDIA_VIDEO_TITLE}\n\n")
+            sections.append(f"#### {MEDIA_VIDEO_TITLE}\n\n")
             for i, (url, desc) in enumerate(self._media_videos, 1):
                 if url in downloaded_urls:
                     local_name = downloaded_urls[url]
@@ -382,7 +384,7 @@ class HtmlMarkdownParser:
             sections.append("\n")
 
         if self._media_images:
-            sections.append(f"### {MEDIA_IMAGE_TITLE}\n\n")
+            sections.append(f"#### {MEDIA_IMAGE_TITLE}\n\n")
             for i, (url, alt) in enumerate(self._media_images, 1):
                 if url in downloaded_urls:
                     local_name = downloaded_urls[url]

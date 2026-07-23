@@ -50,15 +50,19 @@ class OmniArticleMarkdown:
     def save(
         self,
         save_path: str = "",
-        is_save_imgs: bool = True,
+        is_save_imgs: bool = False,
         is_save_videos: bool = False,
         save_imgs_dir: str = "imgs",
         save_videos_dir: str = "videos",
+        json_output: bool = False,
     ) -> str:
         if not self.parser_ctx:
             raise ValueError("No parsed content to save. Please call parse() first.")
         save_path = save_path or self.DEFAULT_SAVE_PATH
         file_path = Path(save_path)
+        # 路径不存在且无后缀 → 当目录处理
+        if not file_path.exists() and not file_path.suffix:
+            file_path.mkdir(parents=True, exist_ok=True)
         if file_path.is_dir():
             from datetime import datetime, timezone
             from .utils import to_snake_case
@@ -155,7 +159,7 @@ class OmniArticleMarkdown:
 
     def _extract_article(self, ctx: ReaderContext) -> ExtractorContext:
         soup = BeautifulSoup(ctx.raw_html, "html5lib")
-        extract = ExtractorFactory.create(soup)
+        extract = ExtractorFactory.create(soup, self.url_or_path)
         article = extract.extract()
         if not article:
             raise ValueError("Failed to extract article content.")

@@ -8,7 +8,33 @@ from bs4.element import Comment, Tag
 
 from .article import Article
 from .plugins import load_plugins
-from .utils import filter_tag, get_article_author, get_article_tags, get_attr_text, get_canonical_url, get_og_description, get_og_title, get_og_url, get_publish_date, get_title
+from urllib.parse import urlparse
+
+from .utils import filter_tag, get_article_author, get_article_tags, get_attr_text, get_canonical_url, get_og_description, get_og_site_name, get_og_title, get_og_url, get_publish_date, get_title
+
+# 域名 → 平台名映射（无需单独 extractor 的站点）
+_DOMAIN_PLATFORM_MAP = {
+    "bilibili.com": "Bilibili",
+    "b23.tv": "Bilibili",
+    "weibo.com": "微博",
+    "douyin.com": "抖音",
+    "douban.com": "豆瓣",
+    "github.com": "GitHub",
+    "stackoverflow.com": "Stack Overflow",
+    "reddit.com": "Reddit",
+    "youtube.com": "YouTube",
+    "notion.so": "Notion",
+    "figma.com": "Figma",
+    "medium.com": "Medium",
+    "zhihu.com": "知乎",
+    "jianshu.com": "简书",
+    "baidu.com": "百度",
+    "qq.com": "腾讯",
+    "taobao.com": "淘宝",
+    "jd.com": "京东",
+    "xiaohongshu.com": "小红书",
+    " bilibili.com": "Bilibili",
+}
 
 type TagPredicate = Callable[[Tag], bool]
 
@@ -36,8 +62,9 @@ ARTICLE_CONTAINERS = [("article", None), ("main", None), ("body", None)]
 
 
 class Extractor(ABC):
-    def __init__(self, soup: BeautifulSoup):
+    def __init__(self, soup: BeautifulSoup, url: str = ""):
         self.soup = soup
+        self._url = url
 
     @final
     def extract(self) -> Article | None:
@@ -49,6 +76,8 @@ class Extractor(ABC):
         for container in article_container:
             article = self.extract_article()
             if article:
+                if not article.platform:
+                    article.platform = self.platform_name
                 return article
             article_tag = self.extract_article_from_soup(container)
             if article_tag:
@@ -147,11 +176,11 @@ class Extractor(ABC):
 
 class ExtractorFactory:
     @staticmethod
-    def create(soup: BeautifulSoup) -> Extractor:
-        for extract in _load_extractors(soup):
+    def create(soup: BeautifulSoup, url: str = "") -> Extractor:
+        for extract in _load_extractors(soup, url):
             if extract.can_handle():
                 return extract
-        return DefaultExtractor(soup)
+        return DefaultExtractor(soup, url)
 
 
 class DefaultExtractor(Extractor):
@@ -159,6 +188,32 @@ class DefaultExtractor(Extractor):
     def can_handle(self) -> bool:
         return True
 
+    @override
+    @property
+    def platform_name(self) -> str:
+        # 1. 先从 og:site_name 取
+        site = get_og_site_name(self.soup)
+        if site:
+            return site
+        # 2. 从 canonical / og:url 取域名
+        url = get_canonical_url(self.soup) or get_og_url(self.soup) or self._url
+        if url:
+            try:
+                netloc = urlparse(url).netloc.lower()
+                # 去掉 www. 前缀
+                if netloc.startswith("www."):
+                    netloc = netloc[4:]
+                # 精确匹配
+                if netloc in _DOMAIN_PLATFORM_MAP:
+                    return _DOMAIN_PLATFORM_MAP[netloc]
+                # 后缀匹配（子域名）
+                for domain, name in _DOMAIN_PLATFORM_MAP.items():
+                    if netloc.endswith(domain):
+                        return name
+            except ValueError:
+                pass
+        return "其他"
 
-def _load_extractors(soup: BeautifulSoup) -> list[Extractor]:
-    return load_plugins(Extractor, "extractors", soup)
+
+def _load_extractors(soup: BeautifulSoup, url: str = "") -> list[Extractor]:
+    return load_plugins(Extractor, "extractors", soup, url)

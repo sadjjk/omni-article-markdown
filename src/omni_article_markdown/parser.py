@@ -271,7 +271,10 @@ class HtmlMarkdownParser:
         )
         alt = get_attr_text(element.attrs.get("alt"))
         if src:
-            if not src.startswith("http") and self.article.url:
+            # 协议相对 URL（//i0.hdslb.com/...）补全 https
+            if src.startswith("//"):
+                src = f"https:{src}"
+            elif not src.startswith("http") and self.article.url:
                 src = urljoin(self.article.url, src)
             # 收集图片到媒体列表（排除 SVG base64）
             if not src.startswith("data:image/svg+xml"):

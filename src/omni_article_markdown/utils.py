@@ -170,7 +170,10 @@ def get_article_tags(soup: BeautifulSoup) -> list[str]:
         if kw_tag:
             kw = get_tag_text(kw_tag, "content")
             if kw:
-                tags = [t.strip() for t in kw.split(",") if t.strip()]
+                raw_tags = [t.strip() for t in kw.split(",") if t.strip()]
+                # 过滤 SEO 垃圾 keywords：单 tag >20 字符或总数 >10 直接丢弃
+                if raw_tags and all(len(t) <= 20 for t in raw_tags) and len(raw_tags) <= 10:
+                    tags = raw_tags
     return tags
 
 

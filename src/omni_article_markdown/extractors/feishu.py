@@ -31,6 +31,16 @@ class FeishuExtractor(Extractor):
         return title.replace(" - 飞书云文档", "")
 
     @override
+    def extract_author(self) -> str:
+        # 飞书云文档页面通常不展示作者信息，meta 标签也缺失
+        # 尝试从 meta 标签提取
+        for prop in ["article:author", "author", "og:article:author"]:
+            tag = self.soup.find("meta", attrs={"property": prop}) or self.soup.find("meta", attrs={"name": prop})
+            if tag and tag.get("content"):
+                return tag["content"]
+        return ""
+
+    @override
     def pre_handle_soup(self):
         """
         https://open.feishu.cn/document/docs/docs/data-structure/block

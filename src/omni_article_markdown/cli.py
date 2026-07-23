@@ -18,6 +18,10 @@ Parse an article and print Markdown:
   mdcli <url>
 Parse and save to a specific directory:
   mdcli <url> -s /path/to/save
+Save with images and videos:
+  mdcli <url> -s /path/to/save --is-save-imgs --is-save-videos
+Save and output result as JSON:
+  mdcli <url> -s /path/to/save --json-output
 
 
 Notes:
@@ -67,10 +71,11 @@ def cli(): ...
     flag_value="./",
     default=None,
 )
-@click.option("--is-save-imgs", is_flag=True, default=True, help="Download images when saving.")
+@click.option("--is-save-imgs", is_flag=True, default=False, help="Download images when saving.")
 @click.option("--is-save-videos", is_flag=True, default=False, help="Download videos when saving.")
 @click.option("--save-imgs-dir", default="imgs", help="Image save subdirectory.")
 @click.option("--save-videos-dir", default="videos", help="Video save subdirectory.")
+@click.option("--json-output", is_flag=True, default=False, help="Output save result as JSON. Only applies with -s.")
 def parse_article(
     url_or_path: str,
     save: str | None,
@@ -79,6 +84,7 @@ def parse_article(
     is_save_videos: bool,
     save_imgs_dir: str,
     save_videos_dir: str,
+    json_output: bool,
 ):
     """
     Parses an article from a URL or local path and outputs/saves it as Markdown.
@@ -96,8 +102,13 @@ def parse_article(
                 is_save_videos=is_save_videos,
                 save_imgs_dir=save_imgs_dir,
                 save_videos_dir=save_videos_dir,
+                json_output=json_output,
             )
-            stderr_reporter(f"Article saved to: {save_path}")
+            if json_output:
+                import json
+                click.echo(json.dumps({"save_path": str(save_path)}, ensure_ascii=False))
+            else:
+                stderr_reporter(f"Article saved to: {save_path}")
     except Exception as e:
         stderr(f"Error: {str(e)}")
         sys.exit(1)

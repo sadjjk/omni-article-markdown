@@ -1,7 +1,7 @@
 from typing import override
 
 from ..extractor import Extractor, TagPredicate
-from ..utils import get_og_site_name
+from ..utils import filter_tag, get_og_site_name
 
 
 class QuantamagazineExtractor(Extractor):
@@ -23,3 +23,11 @@ class QuantamagazineExtractor(Extractor):
     @override
     def article_container(self) -> tuple:
         return ("div", {"id": "postBody"})
+
+    @override
+    def extract_author(self) -> str:
+        # Quanta Magazine 文章作者在 .byline__author span 中
+        author_tag = filter_tag(self.soup.select_one(".byline__author"))
+        if author_tag:
+            return author_tag.get_text(strip=True)
+        return ""

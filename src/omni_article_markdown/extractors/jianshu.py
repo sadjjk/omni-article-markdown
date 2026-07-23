@@ -30,3 +30,13 @@ class JianshuExtractor(Extractor):
                 if src:
                     img_tag.attrs["src"] = src
         return element
+
+    @override
+    def extract_author(self) -> str:
+        # 简书页面作者信息在 JSON-LD 中，但 name 字段常为空
+        # 备用：从页面 DOM 中的 .follow-detail 或 .info .name 提取
+        author_tag = filter_tag(self.soup.select_one(".follow-detail .name"))
+        if author_tag:
+            return author_tag.get_text(strip=True)
+        # 备用：从 meta 标签提取
+        return super().extract_author()

@@ -21,6 +21,14 @@ class Netease163Extractor(Extractor):
         return ("div", {"data-testid": "article"})
 
     @override
+    def extract_author(self) -> str:
+        # 百家号作者在 [data-testid=author-name] 元素中
+        author_tag = filter_tag(self.soup.find("p", attrs={"data-testid": "author-name"}))
+        if author_tag:
+            return author_tag.get_text(strip=True)
+        return ""
+
+    @override
     def pre_handle_soup(self):
         for tag in self.soup.find_all("span", {"class": "bjh-p"}):
             span_tag = filter_tag(tag)

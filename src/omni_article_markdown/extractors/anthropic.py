@@ -21,3 +21,12 @@ class ClaudeDocExtractor(Extractor):
     @override
     def extract_url(self) -> str:
         return "https://www.anthropic.com/"
+
+    @override
+    def extract_author(self) -> str:
+        # Anthropic 文章页面无独立作者 DOM 元素
+        # 使用 twitter:creator meta 标签作为作者来源
+        twitter_tag = self.soup.find("meta", attrs={"name": "twitter:creator"})
+        if twitter_tag:
+            return twitter_tag.get("content", "")
+        return ""

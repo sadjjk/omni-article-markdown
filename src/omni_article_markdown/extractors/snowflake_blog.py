@@ -1,7 +1,7 @@
 from typing import override
 
 from ..extractor import Extractor, TagPredicate
-from ..utils import is_matched_canonical
+from ..utils import filter_tag, is_matched_canonical
 
 
 class SnowflakeBlogExtractor(Extractor):
@@ -23,3 +23,11 @@ class SnowflakeBlogExtractor(Extractor):
     @override
     def article_container(self) -> tuple:
         return ("div", {"class": "snowflake-responsive-container-inner-padding-medium"})
+
+    @override
+    def extract_author(self) -> str:
+        # Snowflake Blog 作者在 .snowflake-blog-author-text-name 中，取第一个（主作者）
+        author_tag = filter_tag(self.soup.select_one(".snowflake-blog-author-text-name"))
+        if author_tag:
+            return author_tag.get_text(strip=True)
+        return ""
